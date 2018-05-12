@@ -1,22 +1,26 @@
 {
-  "name": "push-to-fcm",
-  "version": "0.0.1",
-  "description": "WebPush-FCM proxy for mobile app",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "author": "tateisu",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "axios": "^0.18.0",
-    "dotenv": "^5.0.1",
-    "koa": "^2.5.1",
-    "koa-body": "^2.5.0",
-    "npmlog": "^4.1.2",
-    "pg": "^7.4.3",
-    "raw-body": "^2.3.3",
-    "sequelize": "^4.37.7",
-    "urlsafe-base64": "^1.0.0"
-  }
+    "name": "push-to-fcm",
+    "version": "0.0.1",
+    "description": "WebPush-FCM proxy for mobile app",
+    "main": "index.js",
+    "scripts": {
+	"start": "node index.js"
+    },
+    "author": "tateisu",
+    "license": "AGPL-3.0-or-later",
+    "repository" : {
+	"type" : "git",
+	"url" : "https://github.com/tateisu/PushToFCM.git"
+    },
+    "dependencies": {
+	"axios": "^0.18.0",
+	"dotenv": "^5.0.1",
+	"koa": "^2.5.1",
+	"koa-body": "^2.5.0",
+	"npmlog": "^4.1.2",
+	"pg": "^7.4.3",
+	"raw-body": "^2.3.3",
+	"sequelize": "^4.37.7",
+	"urlsafe-base64": "^1.0.0"
+    }
 }
