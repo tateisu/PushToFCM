@@ -1,5 +1,5 @@
 
-This app receives event sent from Mastodon's WebPush REST API, then this app send it to my mobile app (Subway Tooter) via Firebase Cloud messaging.
+This app receives event sent from Mastodon's WebPush REST API, then this app send it to my mobile app (Subway Tooter) via Firebase Cloud Messaging.
 
 - Mastodon's WebPush REST API https://github.com/tootsuite/mastodon/pull/7445
 - Subway Tooter https://github.com/tateisu/SubwayTooter
