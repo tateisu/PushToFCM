@@ -6,5 +6,5 @@ This app receives event sent from Mastodon's WebPush REST API, then this app sen
 
 Currently payload decryption is not implemented because Subway Tooter does not requires it's content, just use event as notification check trigger. 
 
-But if you want sample of payload decryptiom. see also
+But if you want sample of payload decryption. see also
 - https://gist.github.com/tateisu/685eab242549d9c9ffc85020f09a4b71
