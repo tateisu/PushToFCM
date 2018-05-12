@@ -4,7 +4,7 @@
   "description": "WebPush-FCM proxy for mobile app",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config index.js"
+    "start": "node index.js"
   },
   "author": "tateisu",
   "license": "Apache-2.0",
