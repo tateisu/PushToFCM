@@ -8,3 +8,6 @@ Currently payload decryption is not implemented because Subway Tooter does not r
 
 But if you want sample of payload decryption. see also
 - https://gist.github.com/tateisu/685eab242549d9c9ffc85020f09a4b71
+
+VAPID for Web Push
+- https://tools.ietf.org/html/draft-ietf-webpush-vapid-01#section-4
