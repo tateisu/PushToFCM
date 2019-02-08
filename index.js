@@ -113,7 +113,9 @@ async function serverKeyUpdate(ctx,m){
 	const client_id = ctx.request.body.client_id
 	const server_key = ctx.request.body.server_key
 
-	npmlog.info(`serverKeyUpdate client_id=${client_id}, server_key=${server_key}`)
+	const user_agent = ctx.get('User-Agent')
+
+	npmlog.info(`serverKeyUpdate client_id=${client_id}, server_key=${server_key},user_agent=${user_agent}`)
 
 	if( !client_id) ctx.throw(422,`missing parameter 'client_id'`)
 	if( !server_key ) ctx.throw(422,`missing parameter 'server_key'`)
