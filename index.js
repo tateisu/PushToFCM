@@ -204,39 +204,81 @@ function getPemFromPublicKey(public_key){
 
 const reAuthorizationWebPush = new RegExp("^WebPush\\s+(\\S+)")
 const reCryptoKeySignPublicKey = new RegExp("p256ecdsa=([^;\\s]+)")
-
+const reAuthorizationVapid = new RegExp("^vapid\\s+t=([^\\s,]+)[,\\s]+k=([^\\s,]+)")
 
 function verifyServerKey(ctx, savedServerKey){
-    const auth_header = ctx.get('Authorization')
-    const crypto_key = ctx.get('Crypto-Key')
-    if( auth_header && crypto_key ){
-	let m = reAuthorizationWebPush.exec( auth_header )
-	if( !m ){
-	    console.log("header not match: Authorization")
-	}else{
-	    const token = m[1]
 
-	    m = reCryptoKeySignPublicKey.exec(crypto_key)
-	    if( !m ){
-		console.log("header not match: Crypto-Key")
-	    }else{
-		const public_key = decodeBase64(m[1])
-		const saved_key = decodeBase64(savedServerKey)
-		if( 0 != Buffer.compare( public_key, saved_key) ){
-		    ctx.throw(400,"server_key not match.")
-		}
-		
-		const pem = getPemFromPublicKey(public_key)
-		try{
-		    jwt.verify(token, Buffer.from(pem), { algorithms: ['ES256'] })
-		    return true
-		}catch(err){
-		    ctx.throw(503,`JWT verify failed. ${err}`)
-		}
+    if( savedServerKey == null || savedServerKey == '3q2+rw' )
+	return true
+
+    const crypto_key = ctx.get('Crypto-Key')
+    const auth_header = ctx.get('Authorization')
+    if( !auth_header ){
+	ctx.throw(400,"missing Authorization header.")
+	return false
+    }
+
+    let m = reAuthorizationVapid.exec( auth_header)
+    if(m){
+	// vapid t=XXX, k=XXX
+	const token = m[1]
+	const public_key = decodeBase64(m[2])
+
+	if( savedServerKey != null && savedServerKey !=  '3q2+rw' ){
+	    const saved_key = decodeBase64(savedServerKey)
+	    if( 0 != Buffer.compare( public_key, saved_key) ){
+		ctx.throw(400,"server_key not match.")
+		return false
 	    }
 	}
+
+	try{
+	    const pem = getPemFromPublicKey(public_key)
+	    jwt.verify(token, Buffer.from(pem), { algorithms: ['ES256'] })
+	    return true
+	}catch(err){
+	    console.log(`${err}`)
+	    ctx.throw(503,`JWT verify failed.`)
+	    return false
+	}
     }
-    ctx.throw(400,"missing JWT signature.")
+
+    m = reAuthorizationWebPush.exec( auth_header )
+    if( m ){
+	// WebPush ...	
+	const token = m[1]
+	
+	if(!crypto_key){
+	    ctx.throw(400,"missing Crypto-Key header.")
+	    return false
+	}
+	m = reCryptoKeySignPublicKey.exec(crypto_key)
+	if( !m ){
+	    ctx.throw("Crypto-Key header does not contains p256ecdsa=... part.")
+	    return false
+	}
+	const public_key = decodeBase64(m[1])
+
+	if( savedServerKey != null && savedServerKey !=  '3q2+rw' ){
+	    const saved_key = decodeBase64(savedServerKey)
+	    if( 0 != Buffer.compare( public_key, saved_key) ){
+		ctx.throw(400,"server_key not match.")
+		return false
+	    }
+	}
+
+	try{
+	    const pem = getPemFromPublicKey(public_key)
+	    jwt.verify(token, Buffer.from(pem), { algorithms: ['ES256'] })
+	    return true
+	}catch(err){
+	    console.log(`${err}`)
+	    ctx.throw(503,`JWT verify failed.`)
+	    return false
+	}
+    }
+
+    ctx.throw(400,"Authorization header is not vapid or WebPush.")
     return false
 }
 
@@ -251,21 +293,19 @@ async function pushCallback(ctx,m){
 	
 	const body = ctx.request.body
 	npmlog.info(`callback device_id=${device_id},acct=${acct},body=${body.length}bytes`)
-	
+
+	let serverKey = null
 	if( client_id ){
 	    const row = await ServerKey.findOne({
 		where:{
 		    clientId: client_id
 		}
 	    })
-	    if( row == null ){
-		npmlog.info(`missing serverkey for client_id=${client_id}`)
-	    }else{
-		if(!verifyServerKey(ctx, row.serverKey)){
-		    npmlog.error("verifyServerKey failed.")
-		    return
-		}
-	    }
+	    if(row !=null) serverKey = row.serverKey
+	}
+	if(!verifyServerKey(ctx, serverKey)){
+	    npmlog.error("verifyServerKey failed.")
+	    return
 	}
 
 	try{
