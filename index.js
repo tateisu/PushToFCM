@@ -26,7 +26,7 @@ const sequelize = new Sequelize(
 	dialect: process.env.DB_DIALECT,
 	host: process.env.DB_HOST,
 	port: process.env.DB_PORT,
-	operatorsAliases: false,
+	//operatorsAliases: false,
 
 	logging: (a,b,c,file,dir)=>{
 	    //const args = Array.from(arguments)
@@ -96,6 +96,31 @@ const ServerKey = sequelize.define('webpush_server_key2', {
     ]
 })
 
+const Endpoint = sequelize.define('webpush_endpoint',{
+    acct: {
+	type:  Sequelize.STRING,
+	allowNull: false,
+    },
+
+    deviceId: {
+	type: Sequelize.STRING,
+        allowNull: false,
+    },
+
+    endpoint:  {
+        type: Sequelize.TEXT,
+        allowNull: false,
+    },
+},{
+    indexes: [
+        {
+            name: 'webpush_endpoint_unique',
+            unique: true,
+            fields: ['deviceId','acct']
+        }
+    ]
+})
+
 const body_normal = KoaBody({
     multipart: true
 })
@@ -129,6 +154,31 @@ async function serverKeyUpdate(ctx,m){
 	ctx.status = 200
     })
 }
+
+async function saveEndpoint(ctx,m){
+    return await body_normal(ctx,async()=>{
+
+	const acct = ctx.request.body.acct
+	const deviceId = ctx.request.body.deviceId
+	const endpoint = ctx.request.body.endpoint
+
+	npmlog.info(`saveEndpoint acct=${acct}, deviceId=${deviceId}, endpoint=${endpoint}`)
+
+	if( !acct ) ctx.throw(422,`missing parameter 'acct'`)
+	if( !deviceId ) ctx.throw(422,`missing parameter 'deviceId'`)
+	if( !endpoint ) ctx.throw(422,`missing parameter 'endpoint'`)
+
+	const created = await Endpoint.upsert({
+	    acct: acct,
+	    deviceId: deviceId,
+	    endpoint: endpoint
+	})
+	npmlog.info(`created=${created}`)
+
+	ctx.status = 200
+    })
+}
+
 
 async function tokenCheck(ctx,m){
     return await body_normal(ctx,async()=>{
@@ -290,6 +340,22 @@ async function pushCallback(ctx,m){
 	const acct = params[1]
 	const flags = params[2] // may null, not used
 	const client_id = params[3] // may null
+	const serviceType = params[4]
+
+	const row = await Endpoint.findOne({
+	    where:{
+		acct: acct,
+		deviceId: device_id
+	    }
+	})
+
+	if(row!=null){
+	    console.log(`checkEndpoint: a=${row.endpoint} b=${ctx.url}`);
+	    if( row.endpoint != ctx.url ){
+		ctx.status = 410
+		return
+	    }
+	}
 	
 	const body = ctx.request.body
 	npmlog.info(`callback device_id=${device_id},acct=${acct},body=${body.length}bytes`)
@@ -357,9 +423,12 @@ async function pushCallback(ctx,m){
     })
 }
 
+
+
 const rePathCheck = new RegExp("^/webpushtokencheck$")
 const rePathCallback = new RegExp("^/webpushcallback/([^\\?#]+)")
 const rePathServerKey = new RegExp("/webpushserverkey$")
+const rePathEndpoint = new RegExp("^/webpushendpoint$")
 
 async function handleRequest(ctx,next){
     const method = ctx.request.method
@@ -376,6 +445,8 @@ async function handleRequest(ctx,next){
 	m = rePathServerKey.exec(path)
 	if( m ) return await serverKeyUpdate(ctx,m)
 
+	m = rePathEndpoint.exec(path)
+	if( m ) return await saveEndpoint(ctx,m)
     }
     npmlog.info("status=${ctx.status}")
     ctx.throw(404,'Not found') 
@@ -401,6 +472,7 @@ async function main(){
     npmlog.info(`DB sync...`)
     await WebPushTokenCheck.sync()
     await ServerKey.sync()
+    await Endpoint.sync()
 
     const app = new Koa()
     app.use(accessLog)
