@@ -16,7 +16,7 @@
       "asn1.js": "^5.0.1",
       "axios": "^0.21.1",
       "dotenv": "^6.2.0",
-      "jsonwebtoken": "^8.4.0",
+      "jsonwebtoken": "^9.0.0",
       "koa": "^2.7.0",
       "koa-body": "^4.0.7",
       "npmlog": "^4.1.2",
