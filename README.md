@@ -1,6 +1,6 @@
 
 
-Deprecated: complete rewriten. moved to https://github.com/tateisu/SubwayTooterAppServerV2
+Deprecated: moved to https://github.com/tateisu/SubwayTooterAppServerV2
 
 This app receives event sent from Mastodon's WebPush REST API, then this app send it to my mobile app (Subway Tooter) via Firebase Cloud Messaging.
 
