@@ -22,7 +22,7 @@
       "npmlog": "^4.1.2",
       "pg": "^7.8.0",
       "raw-body": "^2.3.3",
-      "sequelize": "^5.3.0",
+      "sequelize": "^6.29.0",
       "urlsafe-base64": "^1.0.0"
    }
 }
